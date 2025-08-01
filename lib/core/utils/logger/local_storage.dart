@@ -3,17 +3,19 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../../../features/auth/data/model/login_response.dart';
+
 abstract class LocalStorage {
   FlutterSecureStorage storage;
   LocalStorage({required this.storage});
   Future<void> saveAcessToken(String value);
   Future<void> saveRefreshToken(String value);
-  // Future<void> saveLoginResponse(LoginResponse loginRes);
+  Future<void> saveLoginResponse(LoginResponse loginRes);
   Future<void> saveSubscriptionId(String value);
 
   Future<String?> getAcessToken();
   Future<String?> getRefreshToken();
-  //  Future<LoginResponse?> getLoginResponse();
+  Future<LoginResponse?> getLoginResponse();
   Future<String?> getSubscriptionId();
 
   Future<void> clearAllData();
@@ -48,21 +50,21 @@ class LocalStorageImpl implements LocalStorage {
   @override
   FlutterSecureStorage storage = const FlutterSecureStorage();
 
-  // @override
-  // Future<LoginResponse?> getLoginResponse() async {
-  //   String? jsonString = await storage.read(key: loginKey);
+  @override
+  Future<LoginResponse?> getLoginResponse() async {
+    String? jsonString = await storage.read(key: loginKey);
 
-  //   if (jsonString == null) return null; // 🔐 Safe null check
+    if (jsonString == null) return null; // 🔐 Safe null check
 
-  //   Map<String, dynamic> jsonMap = jsonDecode(jsonString);
-  //   return LoginResponse.fromJson(jsonMap);
-  // }
+    Map<String, dynamic> jsonMap = jsonDecode(jsonString);
+    return LoginResponse.fromJson(jsonMap);
+  }
 
-  // @override
-  // Future<void> saveLoginResponse(LoginResponse loginRes) async {
-  //   String jsonString = jsonEncode(loginRes.toJson());
-  //   await storage.write(key: loginKey, value: jsonString);
-  // }
+  @override
+  Future<void> saveLoginResponse(LoginResponse loginRes) async {
+    String jsonString = jsonEncode(loginRes.toJson());
+    await storage.write(key: loginKey, value: jsonString);
+  }
 
   @override
   Future<String?> getSubscriptionId() async {

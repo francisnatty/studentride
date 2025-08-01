@@ -10,7 +10,9 @@ class DioClient implements ApiClient {
   DioClient() {
     _client = Dio(
       BaseOptions(
-        baseUrl: 'http://api.studio.zagasm.com/api/v1/',
+        //  baseUrl: 'http://localhost:5000/api/',
+        baseUrl: 'http://10.0.2.2:5000/api/',
+
         contentType: Headers.formUrlEncodedContentType,
         headers: {'X-Requested-With': 'XMLHttpRequest'},
         connectTimeout: Duration(seconds: 15),

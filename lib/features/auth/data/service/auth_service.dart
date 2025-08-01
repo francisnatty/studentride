@@ -6,6 +6,8 @@ import '../model/create_acct_params.dart';
 abstract class AuthService {
   Future<ApiResponse> createAcct({required RegistrationModel params});
   Future<ApiResponse> login({required String email, required String password});
+  Future<ApiResponse> verifyOtp({required String email, required String otp});
+  Future<ApiResponse> resendOtp({required String email});
 }
 
 class AuthServiceImpl implements AuthService {
@@ -31,6 +33,31 @@ class AuthServiceImpl implements AuthService {
       path: 'auth/login',
       method: MethodType.post,
       payload: data,
+    );
+
+    return response;
+  }
+
+  @override
+  Future<ApiResponse> resendOtp({required String email}) async {
+    final response = await apiClient.request(
+      path: 'auth/resend-otp',
+      method: MethodType.post,
+      payload: {'email': email},
+    );
+
+    return response;
+  }
+
+  @override
+  Future<ApiResponse> verifyOtp({
+    required String email,
+    required String otp,
+  }) async {
+    final response = await apiClient.request(
+      path: 'auth/verify-email-otp',
+      method: MethodType.post,
+      payload: {'email': email, 'otp': otp},
     );
 
     return response;
