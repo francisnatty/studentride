@@ -3,9 +3,8 @@ import 'package:google_fonts/google_fonts.dart'; // 👈 Import
 import 'package:provider/provider.dart';
 import 'package:studentride/features/auth/notifier/auth_notifier.dart';
 import 'features/auth/data/repo/auth_repo.dart';
-import 'features/auth/screens/create_acct.dart';
-import 'features/auth/screens/login.dart';
-import 'features/auth/screens/verifyotp.dart';
+
+import 'features/home/screen/home_screen.dart';
 
 void main() {
   runApp(
@@ -32,7 +31,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: OTPVerificationScreen(email: 'fnathaniel929@gmail.com'),
+      //home: OTPVerificationScreen(email: 'fnathaniel929@gmail.com'),
+      home: HomeScreen(),
     );
   }
 }

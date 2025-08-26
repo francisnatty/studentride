@@ -5,6 +5,7 @@ import 'package:studentride/core/widget/snackbar_helper.dart';
 
 import '../data/model/create_acct_params.dart';
 import '../data/repo/auth_repo.dart';
+import '../widget/dialog_helper.dart';
 
 class AuthNotifier extends ChangeNotifier {
   final AuthRepo authRepo;
@@ -32,6 +33,17 @@ class AuthNotifier extends ChangeNotifier {
   void _setSuccess(bool val) {
     _isSuccess = val;
     notifyListeners();
+  }
+
+  void handleSuccess(BuildContext context) {
+    DialogHelper.showSuccessDialog(
+      context: context,
+      title: 'Verification Successful!',
+      message: 'Your phone number has been verified successfully.',
+      onContinue: () {
+        Navigator.pushReplacementNamed(context, '/home');
+      },
+    );
   }
 
   Future<void> login({
@@ -97,6 +109,7 @@ class AuthNotifier extends ChangeNotifier {
     result.fold(
       (failure) {
         SnackBarHelper.showError(context, failure.message);
+        handleSuccess(context);
       },
       (success) {
         SnackBarHelper.showSuccess(context, success);
