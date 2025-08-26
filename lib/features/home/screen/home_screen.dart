@@ -1,7 +1,9 @@
+// lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-
-import 'map_select_screen.dart';
+import 'package:provider/provider.dart';
+import '../sm/booking_provider.dart';
+import '../widgets/booking_sheet.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -48,31 +50,9 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // Search Box
-              // TextField(
-              //   decoration: InputDecoration(
-              //     hintText: "Where are you going to",
-              //     prefixIcon: const Icon(Icons.search),
-              //     filled: true,
-              //     fillColor: Colors.grey.shade100,
-              //     border: OutlineInputBorder(
-              //       borderRadius: BorderRadius.circular(12),
-              //       borderSide: BorderSide.none,
-              //     ),
-              //   ),
-              // ),
+              // Search Box - Opens booking bottom sheet
               GestureDetector(
-                onTap: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MapSelectScreen()),
-                  );
-
-                  if (result != null) {
-                    final LatLng selectedDestination = result;
-                    print("Selected location: $selectedDestination");
-                  }
-                },
+                onTap: () => _showBookingBottomSheet(context),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -82,9 +62,9 @@ class HomeScreen extends StatelessWidget {
                     color: Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
+                    children: [
                       Text(
                         "Where are you going to",
                         style: TextStyle(color: Colors.grey),
@@ -228,7 +208,7 @@ class HomeScreen extends StatelessWidget {
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
-                                        'status',
+                                        rider["status"].toString(),
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 12,
@@ -247,7 +227,12 @@ class HomeScreen extends StatelessWidget {
                                           vertical: 8,
                                         ),
                                       ),
-                                      onPressed: () {},
+                                      onPressed:
+                                          isAvailable
+                                              ? () => _showBookingBottomSheet(
+                                                context,
+                                              )
+                                              : null,
                                       child: const Text("Book Ride"),
                                     ),
                                   ],
@@ -265,6 +250,20 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showBookingBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder:
+          (context) => ChangeNotifierProvider(
+            create: (_) => BookingProvider(),
+
+            child: const BookingBottomSheet(),
+          ),
     );
   }
 }

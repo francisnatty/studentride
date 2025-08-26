@@ -1,11 +1,16 @@
+// lib/screens/map_select_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
 
-import '../data/location_service.dart';
+import '../data/service/location_service.dart';
+import '../sm/booking_provider.dart';
 
 class MapSelectScreen extends StatefulWidget {
-  const MapSelectScreen({super.key});
+  final bool isFromBookingFlow;
+
+  const MapSelectScreen({super.key, this.isFromBookingFlow = false});
 
   @override
   State<MapSelectScreen> createState() => _MapSelectScreenState();
@@ -17,6 +22,7 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
   LatLng? _destinationPosition;
   Set<Marker> _markers = {};
   bool _showPredefinedLocations = true;
+  String? _selectedLocationName;
 
   // FUTMINNA coordinates (approximate center of campus)
   static const LatLng _futminnaCenter = LatLng(9.6485, 6.4477);
@@ -250,6 +256,7 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
               onTap: () {
                 setState(() {
                   _destinationPosition = location['position'];
+                  _selectedLocationName = location['name'];
                 });
               },
             );
@@ -260,10 +267,27 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
   void _onMapTapped(LatLng position) {
     setState(() {
       _destinationPosition = position;
+      _selectedLocationName = null; // Clear predefined location name
     });
   }
 
   void _confirmDestination() {
+    if (widget.isFromBookingFlow) {
+      // If coming from booking flow, update the booking provider
+      final bookingProvider = Provider.of<BookingProvider>(
+        context,
+        listen: false,
+      );
+      if (_selectedLocationName != null) {
+        bookingProvider.setDestinationLocation(
+          _selectedLocationName!,
+          _destinationPosition!,
+        );
+      } else {
+        bookingProvider.setDestinationFromMap(_destinationPosition!);
+      }
+    }
+
     Navigator.pop(context, _destinationPosition);
   }
 
@@ -278,11 +302,12 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
     });
   }
 
-  void _moveToLocation(LatLng position) async {
+  void _moveToLocation(LatLng position, String name) async {
     final controller = await _controller.future;
     controller.animateCamera(CameraUpdate.newLatLngZoom(position, 17));
     setState(() {
       _destinationPosition = position;
+      _selectedLocationName = name;
     });
   }
 
@@ -338,7 +363,10 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
                                 style: const TextStyle(fontSize: 14),
                               ),
                               onTap:
-                                  () => _moveToLocation(location['position']),
+                                  () => _moveToLocation(
+                                    location['position'],
+                                    location['name'],
+                                  ),
                             );
                           }).toList(),
                     );
@@ -352,9 +380,14 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final String title =
+        widget.isFromBookingFlow ? "Select Destination" : "Select Destination";
+    final String selectedLocationText =
+        _selectedLocationName ?? "Selected Location";
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Select Destination"),
+        title: Text(title),
         actions: [
           IconButton(
             icon: Icon(
@@ -389,8 +422,8 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
                           icon: BitmapDescriptor.defaultMarkerWithHue(
                             BitmapDescriptor.hueRose,
                           ),
-                          infoWindow: const InfoWindow(
-                            title: "Selected Destination",
+                          infoWindow: InfoWindow(
+                            title: selectedLocationText,
                             snippet: "Tap 'Confirm' to select this location",
                           ),
                         ),
@@ -426,7 +459,11 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
-                            child: const Text("Confirm Destination"),
+                            child: Text(
+                              widget.isFromBookingFlow
+                                  ? "Select This Location"
+                                  : "Confirm Destination",
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -474,6 +511,48 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
                       ),
                     ),
                   ),
+
+                  // Selected location info (if from booking flow)
+                  if (widget.isFromBookingFlow && _destinationPosition != null)
+                    Positioned(
+                      top: 10,
+                      left: 10,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'Selected:',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            Text(
+                              selectedLocationText,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
     );

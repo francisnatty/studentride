@@ -1,7 +1,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:studentride/core/utils/logger/debug_logger.dart';
+import 'package:studentride/features/auth/data/model/login_response.dart';
 
 import '../../../../core/helper/type_def.dart';
+import '../../../../core/utils/logger/local_storage.dart';
 import '../model/create_acct_params.dart';
 import '../service/auth_service.dart';
 
@@ -14,6 +16,7 @@ abstract class AuthRepo {
 
 class AuthRepoImpl implements AuthRepo {
   final authService = AuthServiceImpl();
+  final local = LocalStorageImpl();
 
   @override
   ApiResult<String> createAcct({required RegistrationModel params}) async {
@@ -36,6 +39,7 @@ class AuthRepoImpl implements AuthRepo {
     DebugLogger.log('login', response.rawJson);
 
     if (response.success!) {
+      await local.saveLoginResponse(LoginResponse.fromJson(response.rawJson));
       return Right('success');
     } else {
       return Left(response.failure!);

@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<!-- android/app/src/main/AndroidManifest.xml (top, outside <application>) -->
+<uses-permission android:name="android.permission.INTERNET"/>
+
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <application android:usesCleartextTraffic="true" ...>
     <application
         android:label="studentride"
         android:name="${applicationName}"
