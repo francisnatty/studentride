@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "901212300702",
+    "project_id": "studentride",
+    "storage_bucket": "studentride.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:901212300702:android:4b1d19d8655d2c7390228f",
+        "android_client_info": {
+          "package_name": "com.example.studentride"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEcw13Cjh6yNtx_68pbXIkp89s4wZxVwE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

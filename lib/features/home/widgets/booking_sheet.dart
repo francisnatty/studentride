@@ -282,7 +282,7 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
             onConfirm: () {
               Navigator.pop(context); // Close fare preview
               Navigator.pop(context); // Close booking sheet
-              provider.requestRide();
+              provider.requestRide(context: context);
               _showRideRequestStatus(provider);
             },
           ),

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../core/widget/snackbar_helper.dart';
 import '../data/model/request_ride_response.dart';
 import '../data/model/ride_request_params.dart';
 import '../data/repo/home_repo.dart';
@@ -106,7 +107,7 @@ class BookingProvider with ChangeNotifier {
     );
   }
 
-  Future<void> requestRide() async {
+  Future<void> requestRide({required BuildContext context}) async {
     if (_farePreview == null ||
         _pickupCoordinates == null ||
         _destinationCoordinates == null) {
@@ -143,6 +144,8 @@ class BookingProvider with ChangeNotifier {
       (response) {
         _rideResponse = response;
         _setState(BookingState.rideRequested);
+        Navigator.pop(context);
+        SnackBarHelper.showSuccess(context, response.message);
       },
     );
   }
