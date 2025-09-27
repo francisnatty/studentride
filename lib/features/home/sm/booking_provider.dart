@@ -4,7 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../core/widget/snackbar_helper.dart';
 import '../data/model/request_ride_response.dart';
-import '../data/model/ride_request_params.dart';
+import '../data/model/ride_request_params.dart'; // <- Make sure this matches the updated DTO file
 import '../data/repo/home_repo.dart';
 
 enum BookingState {
@@ -21,8 +21,8 @@ class BookingProvider with ChangeNotifier {
   final HomeRepo _homeRepo = HomeRepoImpl();
 
   BookingState _state = BookingState.initial;
-  String? _pickupLocation;
-  String? _destinationLocation;
+  String? _pickupLocation; // used as pickupAddress
+  String? _destinationLocation; // used as dropoffAddress
   LatLng? _pickupCoordinates;
   LatLng? _destinationCoordinates;
   Map<String, dynamic>? _farePreview;
@@ -40,7 +40,7 @@ class BookingProvider with ChangeNotifier {
   RideResponse? get rideResponse => _rideResponse;
 
   // Popular pickup locations for FUTMINNA
-  final List<Map<String, dynamic>> _popularPickupLocations = [
+  final List<Map<String, dynamic>> _popularPickupLocations = const [
     {'name': 'Campus', 'coordinates': LatLng(9.6485, 6.4477)},
     {'name': 'Campus gate', 'coordinates': LatLng(9.6460, 6.4440)},
     {'name': 'Library', 'coordinates': LatLng(9.6475, 6.4485)},
@@ -64,13 +64,18 @@ class BookingProvider with ChangeNotifier {
 
   void setDestinationFromMap(LatLng coordinates) {
     _destinationCoordinates = coordinates;
+    // Keep a sensible placeholder for address if chosen via map
     _destinationLocation = "Selected Location";
     notifyListeners();
   }
 
   Future<void> getFarePreview() async {
-    if (_pickupCoordinates == null || _destinationCoordinates == null) {
-      _setError("Please select both pickup and destination locations");
+    if (_pickupCoordinates == null ||
+        _destinationCoordinates == null ||
+        (_pickupLocation == null || _pickupLocation!.trim().isEmpty) ||
+        (_destinationLocation == null ||
+            _destinationLocation!.trim().isEmpty)) {
+      _setError("Please select both pickup and destination (address + point).");
       return;
     }
 
@@ -80,38 +85,38 @@ class BookingProvider with ChangeNotifier {
       pickupLocation: RLocation(
         type: "Point",
         coordinates: [
-          _pickupCoordinates!.longitude,
+          _pickupCoordinates!.longitude, // [lng, lat]
           _pickupCoordinates!.latitude,
         ],
       ),
       dropoffLocation: RLocation(
         type: "Point",
         coordinates: [
-          _destinationCoordinates!.longitude,
+          _destinationCoordinates!.longitude, // [lng, lat]
           _destinationCoordinates!.latitude,
         ],
       ),
-      fare: 0, // Will be calculated by backend
+      fare: 0, // calculated by backend
+      pickupAddress: _pickupLocation!.trim(),
+      dropoffAddress: _destinationLocation!.trim(),
     );
 
     final result = await _homeRepo.farePreview(params: params);
 
-    result.fold(
-      (failure) {
-        _setError(failure.message);
-      },
-      (data) {
-        _farePreview = data;
-        _setState(BookingState.farePreviewLoaded);
-      },
-    );
+    result.fold((failure) => _setError(failure.message), (data) {
+      _farePreview = data;
+      _setState(BookingState.farePreviewLoaded);
+    });
   }
 
   Future<void> requestRide({required BuildContext context}) async {
     if (_farePreview == null ||
         _pickupCoordinates == null ||
-        _destinationCoordinates == null) {
-      _setError("Missing required information for ride request");
+        _destinationCoordinates == null ||
+        (_pickupLocation == null || _pickupLocation!.trim().isEmpty) ||
+        (_destinationLocation == null ||
+            _destinationLocation!.trim().isEmpty)) {
+      _setError("Missing required information for ride request.");
       return;
     }
 
@@ -121,33 +126,30 @@ class BookingProvider with ChangeNotifier {
       pickupLocation: RLocation(
         type: "Point",
         coordinates: [
-          _pickupCoordinates!.longitude,
+          _pickupCoordinates!.longitude, // [lng, lat]
           _pickupCoordinates!.latitude,
         ],
       ),
       dropoffLocation: RLocation(
         type: "Point",
         coordinates: [
-          _destinationCoordinates!.longitude,
+          _destinationCoordinates!.longitude, // [lng, lat]
           _destinationCoordinates!.latitude,
         ],
       ),
       fare: (_farePreview!['fare'] as num).toDouble(),
+      pickupAddress: _pickupLocation!.trim(),
+      dropoffAddress: _destinationLocation!.trim(),
     );
 
     final result = await _homeRepo.requestRide(params: params);
 
-    result.fold(
-      (failure) {
-        _setError(failure.message);
-      },
-      (response) {
-        _rideResponse = response;
-        _setState(BookingState.rideRequested);
-        Navigator.pop(context);
-        SnackBarHelper.showSuccess(context, response.message);
-      },
-    );
+    result.fold((failure) => _setError(failure.message), (response) {
+      _rideResponse = response;
+      _setState(BookingState.rideRequested);
+      Navigator.pop(context);
+      SnackBarHelper.showSuccess(context, response.message);
+    });
   }
 
   void reset() {

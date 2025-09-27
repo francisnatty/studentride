@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:dartz/dartz.dart';
 import 'package:studentride/core/widget/loading_dialog.dart';
 import 'package:studentride/core/widget/snackbar_helper.dart';
 import 'package:studentride/features/home/screen/driver_home_screen.dart';
-import 'package:studentride/features/home/screen/home_screen.dart';
 
 import '../data/model/create_acct_params.dart';
 import '../data/repo/auth_repo.dart';

@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-
 import 'package:google_fonts/google_fonts.dart';
-
-import 'svg_icon.dart';
 
 class AppButton extends StatelessWidget {
   final String text;

@@ -23,26 +23,32 @@ class RideRequestParams {
   final RLocation pickupLocation;
   final RLocation dropoffLocation;
   final double fare;
+  final String pickupAddress;
+  final String dropoffAddress;
 
   RideRequestParams({
     required this.pickupLocation,
     required this.dropoffLocation,
     required this.fare,
+    required this.pickupAddress,
+    required this.dropoffAddress,
   });
 
-  factory RideRequestParams.fromJson(Map<String, dynamic> json) {
-    return RideRequestParams(
-      pickupLocation: RLocation.fromJson(json['pickupLocation']),
-      dropoffLocation: RLocation.fromJson(json['dropoffLocation']),
-      fare: json['fare'],
-    );
-  }
+  // factory RideRequestParams.fromJson(Map<String, dynamic> json) {
+  //   return RideRequestParams(
+  //     pickupLocation: RLocation.fromJson(json['pickupLocation']),
+  //     dropoffLocation: RLocation.fromJson(json['dropoffLocation']),
+  //     fare: json['fare'],
+  //   );
+  // }
 
   Map<String, dynamic> toJson() {
     return {
       'pickupLocation': pickupLocation.toJson(),
       'dropoffLocation': dropoffLocation.toJson(),
       'fare': fare,
+      'pickupAddress': pickupAddress,
+      'dropoffAddress': dropoffAddress,
     };
   }
 }

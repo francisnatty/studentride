@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart'; // 👈 Import
 import 'package:provider/provider.dart';
 import 'package:studentride/core/utils/logger/local_storage.dart';
 import 'package:studentride/features/auth/notifier/auth_notifier.dart';
+import 'package:studentride/features/auth/notifier/auth_session.dart';
 import 'package:studentride/features/auth/screens/session_gate.dart';
 import 'package:studentride/features/home/data/repo/home_repo.dart';
 import 'package:studentride/features/home/sm/booking_provider.dart';
@@ -13,7 +14,6 @@ import 'package:studentride/features/test.dart';
 import 'package:studentride/firebase_options.dart';
 import 'package:studentride/flutter_local_notification.dart';
 import 'features/auth/data/repo/auth_repo.dart';
-
 import 'features/auth/notifier/auth_session_notifier.dart';
 import 'features/home/screen/home_screen.dart';
 
@@ -35,6 +35,9 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(
+          create: (_) => AuthSession(localStorage: LocalStorageImpl()),
+        ),
         ChangeNotifierProvider(
           create:
               (_) =>

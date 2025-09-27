@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:studentride/core/widget/app_buttons.dart';
 import '../notifier/auth_notifier.dart';
 
 class LoginPage extends StatefulWidget {

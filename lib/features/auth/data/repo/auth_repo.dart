@@ -1,6 +1,8 @@
 import 'package:dartz/dartz.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:studentride/core/utils/logger/debug_logger.dart';
 import 'package:studentride/features/auth/data/model/login_response.dart';
+import 'package:studentride/features/auth/data/model/reset_password.dart';
 
 import '../../../../core/helper/type_def.dart';
 import '../../../../core/utils/logger/local_storage.dart';
@@ -12,6 +14,8 @@ abstract class AuthRepo {
   ApiResult<String> login({required String email, required String password});
   ApiResult<String> verifyOtp({required String email, required String otp});
   ApiResult<String> resendOtp({required String email});
+  ApiResult<String> forgotPassword({required String email});
+  ApiResult<String> resetPassword({required ResetPasswordResponse payload});
 }
 
 class AuthRepoImpl implements AuthRepo {
@@ -40,9 +44,38 @@ class AuthRepoImpl implements AuthRepo {
 
     if (response.success!) {
       await local.saveLoginResponse(LoginResponse.fromJson(response.rawJson));
+
+      //update FCM TOKEN
+      _updateFcmToken();
+
       return Right('success');
     } else {
       return Left(response.failure!);
+    }
+  }
+
+  void _updateFcmToken() async {
+    try {
+      // Get FCM token from Firebase
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+
+      if (fcmToken != null && fcmToken.isNotEmpty) {
+        DebugLogger.log('FCM Token', fcmToken);
+
+        // Update in backend
+        final response = await authService.updateFcmToken(fcm: fcmToken);
+
+        if (response.success!) {
+          DebugLogger.log('FCM Update', 'Token updated successfully');
+        } else {
+          DebugLogger.log(
+            'FCM Update Failed',
+            response.failure?.message ?? 'Unknown error',
+          );
+        }
+      }
+    } catch (e) {
+      DebugLogger.log('FCM Error', e.toString());
     }
   }
 
@@ -67,6 +100,36 @@ class AuthRepoImpl implements AuthRepo {
   }) async {
     final response = await authService.verifyOtp(email: email, otp: otp);
     DebugLogger.log('verify otp', response.rawJson);
+
+    if (response.success!) {
+      String message = response.rawJson['message'];
+
+      return Right(message);
+    } else {
+      return left(response.failure!);
+    }
+  }
+
+  @override
+  ApiResult<String> forgotPassword({required String email}) async {
+    final response = await authService.forgotPassword(email: email);
+    DebugLogger.log('forgot password', response.rawJson);
+
+    if (response.success!) {
+      String message = response.rawJson['message'];
+
+      return Right(message);
+    } else {
+      return left(response.failure!);
+    }
+  }
+
+  @override
+  ApiResult<String> resetPassword({
+    required ResetPasswordResponse payload,
+  }) async {
+    final response = await authService.resetPassword(payload: payload);
+    DebugLogger.log('reset password', response.rawJson);
 
     if (response.success!) {
       String message = response.rawJson['message'];
