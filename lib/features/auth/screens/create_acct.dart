@@ -17,6 +17,8 @@ class _RegisterScreenState extends State<RegisterScreen>
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _matricNumberController = TextEditingController();
+  final _ninController = TextEditingController();
 
   String _selectedRole = 'passenger';
   bool _obscurePassword = true;
@@ -55,6 +57,8 @@ class _RegisterScreenState extends State<RegisterScreen>
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
+    _matricNumberController.dispose();
+    _ninController.dispose();
     super.dispose();
   }
 
@@ -70,6 +74,11 @@ class _RegisterScreenState extends State<RegisterScreen>
         phone: _phoneController.text.trim(),
         password: _passwordController.text.trim(),
         role: _selectedRole,
+        matricNumber:
+            _selectedRole == 'passenger'
+                ? _matricNumberController.text.trim()
+                : null,
+        nin: _selectedRole == 'driver' ? _ninController.text.trim() : null,
       );
 
       print(user.toJson());
@@ -141,6 +150,19 @@ class _RegisterScreenState extends State<RegisterScreen>
             ),
           ),
     );
+  }
+
+  // Clear role-specific fields when role changes
+  void _onRoleChanged(String role) {
+    setState(() {
+      _selectedRole = role;
+      // Clear the controllers for the role that's no longer selected
+      if (role == 'passenger') {
+        _ninController.clear();
+      } else {
+        _matricNumberController.clear();
+      }
+    });
   }
 
   @override
@@ -259,6 +281,11 @@ class _RegisterScreenState extends State<RegisterScreen>
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 32),
+
+                          // Role selector moved to top for better UX
+                          _buildRoleSelector(),
+                          const SizedBox(height: 20),
+
                           _buildTextField(
                             controller: _nameController,
                             label: 'Full Name',
@@ -302,6 +329,48 @@ class _RegisterScreenState extends State<RegisterScreen>
                             },
                           ),
                           const SizedBox(height: 20),
+
+                          // Role-specific fields
+                          if (_selectedRole == 'passenger') ...[
+                            _buildTextField(
+                              controller: _matricNumberController,
+                              label: 'Matric Number (e.g., 2019/1/76162CT)',
+                              icon: Icons.school_outlined,
+                              validator: (val) {
+                                if (val == null || val.isEmpty) {
+                                  return 'Matric number is required for students';
+                                }
+                                // Validate matric number format: YYYY/D/DDDDDXX
+                                if (!RegExp(
+                                  r'^\d{4}/\d{1}/\d{5}[A-Z]{2}$',
+                                ).hasMatch(val)) {
+                                  return 'Invalid matric number format (e.g., 2019/1/76162CT)';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+
+                          if (_selectedRole == 'driver') ...[
+                            _buildTextField(
+                              controller: _ninController,
+                              label: 'National Identification Number (NIN)',
+                              icon: Icons.badge_outlined,
+                              keyboardType: TextInputType.number,
+                              validator: (val) {
+                                if (val == null || val.isEmpty) {
+                                  return 'NIN is required for drivers';
+                                }
+                                if (!RegExp(r'^\d{11}$').hasMatch(val)) {
+                                  return 'NIN must be exactly 11 digits';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+
                           _buildTextField(
                             controller: _passwordController,
                             label: 'Password',
@@ -317,8 +386,6 @@ class _RegisterScreenState extends State<RegisterScreen>
                               return null;
                             },
                           ),
-                          const SizedBox(height: 20),
-                          _buildRoleSelector(),
                           const SizedBox(height: 30),
                           Container(
                             height: 54,
@@ -512,7 +579,7 @@ class _RegisterScreenState extends State<RegisterScreen>
     final isSelected = _selectedRole == role;
 
     return GestureDetector(
-      onTap: () => setState(() => _selectedRole = role),
+      onTap: () => _onRoleChanged(role),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

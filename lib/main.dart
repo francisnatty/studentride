@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart'; // 👈 Import
 import 'package:provider/provider.dart';
+import 'package:studentride/app_navigator.dart';
 import 'package:studentride/core/utils/logger/local_storage.dart';
 import 'package:studentride/features/auth/notifier/auth_notifier.dart';
 import 'package:studentride/features/auth/notifier/auth_session.dart';
@@ -71,7 +72,8 @@ class MyApp extends StatelessWidget {
       //home: OTPVerificationScreen(email: 'fnathaniel929@gmail.com'),
       //    home: HomeScreen(),
       //  home: SessionGate(),
-      home: TestScren(),
+      /// home: TestScren(),
+      home: AppNavigator(),
     );
   }
 }

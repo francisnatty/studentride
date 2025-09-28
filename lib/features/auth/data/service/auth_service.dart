@@ -79,15 +79,25 @@ class AuthServiceImpl implements AuthService {
 
   @override
   Future<ApiResponse> forgotPassword({required String email}) async {
-    final response = await apiClient.request(path: 'auth/forgot-password', method: MethodType.post, payload: {
-      'email': email
-    }  );
+    final response = await apiClient.request(
+      path: 'auth/forgot-password',
+      method: MethodType.post,
+      payload: {'email': email},
+    );
+
+    return response;
   }
 
   @override
-  Future<ApiResponse> resetPassword({required ResetPasswordResponse payload}) async{
-    final response= await apiClient.request(path: '', method: method)
+  Future<ApiResponse> resetPassword({
+    required ResetPasswordResponse payload,
+  }) async {
+    final response = await apiClient.request(
+      path: 'auth/reset-password',
+      method: MethodType.post,
+      payload: payload.toJson(),
+    );
 
-   
+    return response;
   }
 }

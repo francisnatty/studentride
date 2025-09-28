@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:studentride/core/widget/loading_dialog.dart';
 import 'package:studentride/core/widget/snackbar_helper.dart';
 import 'package:studentride/features/home/screen/driver_home_screen.dart';
-
 import '../data/model/create_acct_params.dart';
+import '../data/model/reset_password.dart';
 import '../data/repo/auth_repo.dart';
 import '../widget/dialog_helper.dart';
 
@@ -140,6 +140,58 @@ class AuthNotifier extends ChangeNotifier {
       },
       (success) {
         SnackBarHelper.showSuccess(context, success);
+      },
+    );
+  }
+
+  Future<void> forgotPassword({
+    required BuildContext context,
+    required String email,
+  }) async {
+    LoadingDialog.show(context);
+
+    final result = await authRepo.forgotPassword(email: email);
+
+    if (!context.mounted) return;
+
+    LoadingDialog.hide(context);
+
+    result.fold(
+      (failure) {
+        SnackBarHelper.showError(context, failure.message);
+      },
+      (success) {
+        SnackBarHelper.showSuccess(context, success);
+        // Optionally navigate to OTP verification screen for password reset
+        // Navigator.pushNamed(context, '/verify-reset-otp', arguments: email);
+      },
+    );
+  }
+
+  Future<void> resetPassword({
+    required BuildContext context,
+    required ResetPasswordResponse payload,
+  }) async {
+    LoadingDialog.show(context);
+
+    final result = await authRepo.resetPassword(payload: payload);
+
+    if (!context.mounted) return;
+
+    LoadingDialog.hide(context);
+
+    result.fold(
+      (failure) {
+        SnackBarHelper.showError(context, failure.message);
+      },
+      (success) {
+        SnackBarHelper.showSuccess(context, success);
+        // Navigate back to login screen after successful password reset
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/login',
+          (Route<dynamic> route) => false,
+        );
       },
     );
   }
