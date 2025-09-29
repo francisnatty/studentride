@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../core/widget/app_textfields.dart';
+import 'package:provider/provider.dart';
+import 'package:studentride/core/utils/logger/debug_logger.dart';
+import 'package:studentride/features/auth/notifier/auth_notifier.dart';
 import '../data/model/create_acct_params.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -64,7 +66,7 @@ class _RegisterScreenState extends State<RegisterScreen>
 
   void _register() async {
     if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+      final authNotifier = context.read<AuthNotifier>();
 
       await Future.delayed(const Duration(seconds: 2));
 
@@ -80,83 +82,78 @@ class _RegisterScreenState extends State<RegisterScreen>
                 : null,
         nin: _selectedRole == 'driver' ? _ninController.text.trim() : null,
       );
+      DebugLogger.log('create acct model', user.toString());
 
-      print(user.toJson());
-
-      setState(() => _isLoading = false);
-
-      if (context.mounted) _showSuccessDialog();
+      await authNotifier.createAccount(model: user, context: context);
     }
   }
 
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check_circle,
-                    color: Color(0xFF10B981),
-                    size: 50,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Account Created!',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Your account has been created successfully. You can now sign in.',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF667eea),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Continue to Login',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-    );
-  }
+  // void _showSuccessDialog() {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder:
+  //         (context) => AlertDialog(
+  //           shape: RoundedRectangleBorder(
+  //             borderRadius: BorderRadius.circular(20),
+  //           ),
+  //           content: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               Container(
+  //                 width: 80,
+  //                 height: 80,
+  //                 decoration: BoxDecoration(
+  //                   color: const Color(0xFF10B981).withOpacity(0.1),
+  //                   shape: BoxShape.circle,
+  //                 ),
+  //                 child: const Icon(
+  //                   Icons.check_circle,
+  //                   color: Color(0xFF10B981),
+  //                   size: 50,
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 20),
+  //               const Text(
+  //                 'Account Created!',
+  //                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  //                 textAlign: TextAlign.center,
+  //               ),
+  //               const SizedBox(height: 10),
+  //               const Text(
+  //                 'Your account has been created successfully. You can now sign in.',
+  //                 style: TextStyle(color: Colors.grey, fontSize: 14),
+  //                 textAlign: TextAlign.center,
+  //               ),
+  //               const SizedBox(height: 20),
+  //               SizedBox(
+  //                 width: double.infinity,
+  //                 child: ElevatedButton(
+  //                   onPressed: () {
+  //                     Navigator.pop(context);
+  //                     Navigator.pop(context);
+  //                   },
+  //                   style: ElevatedButton.styleFrom(
+  //                     backgroundColor: const Color(0xFF667eea),
+  //                     shape: RoundedRectangleBorder(
+  //                       borderRadius: BorderRadius.circular(12),
+  //                     ),
+  //                   ),
+  //                   child: const Text(
+  //                     'Continue to Login',
+  //                     style: TextStyle(color: Colors.white),
+  //                   ),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //   );
+  // }
 
-  // Clear role-specific fields when role changes
   void _onRoleChanged(String role) {
     setState(() {
       _selectedRole = role;
-      // Clear the controllers for the role that's no longer selected
       if (role == 'passenger') {
         _ninController.clear();
       } else {

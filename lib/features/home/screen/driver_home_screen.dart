@@ -7,9 +7,23 @@ import '../sm/driver_home_provider.dart';
 import 'package:studentride/features/home/data/model/get_available_rides.dart';
 
 import 'driver_map_screen.dart';
+import 'widgets/driver_status_toggle.dart';
 
-class DriverHomeScreen extends StatelessWidget {
+class DriverHomeScreen extends StatefulWidget {
   const DriverHomeScreen({super.key});
+
+  @override
+  State<DriverHomeScreen> createState() => _DriverHomeScreenState();
+}
+
+class _DriverHomeScreenState extends State<DriverHomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<DriverHomeProvider>().load();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +58,14 @@ class DriverHomeScreen extends StatelessWidget {
               ),
             ),
 
+            SizedBox(height: 10),
+
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20),
+              child: DriverStatusToggle(),
+            ),
+
+            SizedBox(height: 10),
             // Requests list
             Expanded(
               child:

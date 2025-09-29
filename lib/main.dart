@@ -7,16 +7,19 @@ import 'package:studentride/app_navigator.dart';
 import 'package:studentride/core/utils/logger/local_storage.dart';
 import 'package:studentride/features/auth/notifier/auth_notifier.dart';
 import 'package:studentride/features/auth/notifier/auth_session.dart';
-import 'package:studentride/features/auth/screens/session_gate.dart';
+import 'package:studentride/features/home/data/repo/driver_repo.dart';
 import 'package:studentride/features/home/data/repo/home_repo.dart';
 import 'package:studentride/features/home/sm/booking_provider.dart';
 import 'package:studentride/features/home/sm/driver_home_provider.dart';
-import 'package:studentride/features/test.dart';
+import 'package:studentride/features/home/sm/driver_status_provider.dart';
+import 'package:studentride/features/profile/data/repo/profile_repo.dart';
+import 'package:studentride/features/profile/data/service/profile_service.dart';
+import 'package:studentride/features/profile/screens/profile_screen.dart';
+import 'package:studentride/features/profile/sm/profile_provider.dart';
 import 'package:studentride/firebase_options.dart';
 import 'package:studentride/flutter_local_notification.dart';
 import 'features/auth/data/repo/auth_repo.dart';
 import 'features/auth/notifier/auth_session_notifier.dart';
-import 'features/home/screen/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +54,18 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => DriverHomeProvider(HomeRepoImpl()),
         ),
+        ChangeNotifierProvider(
+          create: (_) => DriverAvailabilityProvider(DriverRepoImpl())..load(),
+        ),
+        ChangeNotifierProvider(
+          create:
+              (_) => ProfileProvider(
+                ProfileRepoImpl(
+                  profileService: ProfileServiceImpl(),
+                  localStorage: LocalStorageImpl(),
+                ),
+              ),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -69,11 +84,12 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      //home: OTPVerificationScreen(email: 'fnathaniel929@gmail.com'),
-      //    home: HomeScreen(),
-      //  home: SessionGate(),
-      /// home: TestScren(),
+
+      //  home: TestScren(),
       home: AppNavigator(),
+      //  home: DriverHomeScreen(),
+      //  home: LoginPage(),
+      //  home: ProfileScreen(),
     );
   }
 }

@@ -3,9 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:studentride/features/auth/notifier/auth_session.dart';
 import 'package:studentride/features/home/screen/driver_home_screen.dart';
 import 'package:studentride/features/home/screen/home_screen.dart';
+import 'package:studentride/features/profile/screens/profile_screen.dart';
 
 class StudentRideApp extends StatefulWidget {
-  const StudentRideApp({Key? key}) : super(key: key);
+  const StudentRideApp({super.key});
 
   @override
   State<StudentRideApp> createState() => _StudentRideAppState();
@@ -13,29 +14,11 @@ class StudentRideApp extends StatefulWidget {
 
 class _StudentRideAppState extends State<StudentRideApp> {
   int _currentIndex = 0;
-  late PageController _pageController;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
 
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
     });
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
   }
 
   @override
@@ -43,16 +26,10 @@ class _StudentRideAppState extends State<StudentRideApp> {
     return Consumer<AuthSession>(
       builder: (context, authProvider, _) {
         final isDriver = authProvider.isDriver;
-        final user = authProvider.currentUser;
 
         return Scaffold(
-          body: PageView(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
+          body: IndexedStack(
+            index: _currentIndex,
             children: isDriver ? _getDriverScreens() : _getPassengerScreens(),
           ),
           bottomNavigationBar: Container(
@@ -86,15 +63,31 @@ class _StudentRideAppState extends State<StudentRideApp> {
   List<Widget> _getDriverScreens() {
     return [
       const DriverHomeScreen(),
-      Container(),
-      Container(),
-      Container(),
-      Container(),
+      Container(
+        color: Colors.white,
+        child: const Center(child: Text('My Rides')),
+      ),
+      Container(
+        color: Colors.white,
+        child: const Center(child: Text('Earnings')),
+      ),
+      ProfileScreen(),
     ];
   }
 
   List<Widget> _getPassengerScreens() {
-    return [const HomeScreen(), Container(), Container(), Container()];
+    return [
+      const HomeScreen(),
+      Container(
+        color: Colors.white,
+        child: const Center(child: Text('Rides History')),
+      ),
+      Container(
+        color: Colors.white,
+        child: const Center(child: Text('Student Info')),
+      ),
+      ProfileScreen(),
+    ];
   }
 
   List<BottomNavigationBarItem> _getDriverNavItems() {

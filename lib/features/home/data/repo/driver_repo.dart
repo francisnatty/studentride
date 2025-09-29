@@ -6,19 +6,19 @@ import '../../../../core/helper/type_def.dart';
 
 abstract class DriverRepo {
   ApiResult<String> toggleAvailiability({required bool status});
-  ApiResult<String> getDriverAvailability();
+  ApiResult<bool> getDriverAvailability();
 }
 
 class DriverRepoImpl implements DriverRepo {
   final driverService = DriverServiceImpl();
   @override
-  ApiResult<String> getDriverAvailability() async {
+  ApiResult<bool> getDriverAvailability() async {
     final response = await driverService.getDriverAvailability();
     DebugLogger.log('get availability', response.rawJson);
     if (response.success!) {
-      final message = response.rawJson['message'];
+      final isOnline = response.rawJson['isOnline'];
 
-      return Right(message);
+      return Right(isOnline);
     } else {
       return Left(response.failure!);
     }

@@ -10,8 +10,8 @@ class DioClient implements ApiClient {
   DioClient() {
     _client = Dio(
       BaseOptions(
-        baseUrl: 'http://localhost:5000/api/',
-        //  baseUrl: 'http://192.168.137.191/api/',
+        //  baseUrl: 'http://localhost:5000/api/',
+        baseUrl: 'http://192.168.8.158:5000/api/',
 
         //   baseUrl: 'http://10.0.2.2:5000/api/',
         contentType: Headers.formUrlEncodedContentType,

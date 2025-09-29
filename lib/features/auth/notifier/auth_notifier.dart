@@ -77,16 +77,30 @@ class AuthNotifier extends ChangeNotifier {
     _setLoading(false);
   }
 
-  Future<void> createAccount(RegistrationModel model) async {
+  Future<void> createAccount({
+    required RegistrationModel model,
+    required BuildContext context,
+  }) async {
     _setLoading(true);
     _setError(null);
     _setSuccess(false);
 
+    LoadingDialog.show(context);
+
     final result = await authRepo.createAcct(params: model);
 
+    // result.fold(
+    //   (failure) => _setError(failure.message),
+    //   (_) => _setSuccess(true),
+    // );
+
     result.fold(
-      (failure) => _setError(failure.message),
-      (_) => _setSuccess(true),
+      (failure) {
+        SnackBarHelper.showError(context, failure.message);
+      },
+      (success) {
+        SnackBarHelper.showSuccess(context, success);
+      },
     );
 
     _setLoading(false);

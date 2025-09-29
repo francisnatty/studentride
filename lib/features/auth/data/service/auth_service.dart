@@ -1,6 +1,7 @@
 import 'package:studentride/core/api/api.dart';
 import 'package:studentride/core/helper/enum.dart';
 
+import '../../../../core/utils/logger/local_storage.dart';
 import '../model/create_acct_params.dart';
 import '../model/reset_password.dart';
 
@@ -16,6 +17,7 @@ abstract class AuthService {
 
 class AuthServiceImpl implements AuthService {
   final apiClient = DioClient();
+  final local = LocalStorageImpl();
   @override
   Future<ApiResponse> createAcct({required RegistrationModel params}) async {
     final response = await apiClient.request(
@@ -69,6 +71,9 @@ class AuthServiceImpl implements AuthService {
 
   @override
   Future<ApiResponse> updateFcmToken({required String fcm}) async {
+    final login = await local.getLoginResponse();
+    apiClient.setToken(login!.data.token);
+
     final response = await apiClient.request(
       path: 'auth/fcm-token',
       method: MethodType.put,
