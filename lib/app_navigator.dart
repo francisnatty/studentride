@@ -6,7 +6,7 @@ import 'package:studentride/features/auth/screens/login.dart';
 import 'features/auth/notifier/auth_session.dart';
 
 class AppNavigator extends StatelessWidget {
-  const AppNavigator({Key? key}) : super(key: key);
+  const AppNavigator({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +28,7 @@ class AppNavigator extends StatelessWidget {
 }
 
 class SplashScreen extends StatelessWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

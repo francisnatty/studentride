@@ -11,7 +11,7 @@ abstract class HomeService {
     required RideRequestParams params,
   });
   Future<ApiResponse> farePreview({required RideRequestParams params});
-  Future<ApiResponse<GetAvailableModel>> getAvailableRides();
+  Future<ApiResponse<GetRideModel>> getAvailableRides();
   Future<ApiResponse> acceptRide({required String rideId});
   Future<ApiResponse> rejectRide({required String rideId});
 }
@@ -68,14 +68,14 @@ class HomeServiceImpl implements HomeService {
   }
 
   @override
-  Future<ApiResponse<GetAvailableModel>> getAvailableRides() async {
+  Future<ApiResponse<GetRideModel>> getAvailableRides() async {
     final login = await local.getLoginResponse();
     apiClient.setToken(login!.data.token);
 
     final response = await apiClient.request(
       path: 'drivers/rides/available',
       method: MethodType.get,
-      fromJsonT: (json) => GetAvailableModel.fromJson(json),
+      fromJsonT: (json) => GetRideModel.fromJson(json),
     );
 
     return response;

@@ -16,10 +16,13 @@ import 'package:studentride/features/profile/data/repo/profile_repo.dart';
 import 'package:studentride/features/profile/data/service/profile_service.dart';
 import 'package:studentride/features/profile/screens/profile_screen.dart';
 import 'package:studentride/features/profile/sm/profile_provider.dart';
+import 'package:studentride/features/ride/data/repo/ride_repo.dart';
+import 'package:studentride/features/ride/sm/ride_provider.dart';
 import 'package:studentride/firebase_options.dart';
 import 'package:studentride/flutter_local_notification.dart';
 import 'features/auth/data/repo/auth_repo.dart';
 import 'features/auth/notifier/auth_session_notifier.dart';
+import 'features/home/sm/driver_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,6 +69,13 @@ void main() async {
                 ),
               ),
         ),
+        ChangeNotifierProvider(
+          create:
+              (_) => DriversProvider(repo: DriverRepoImpl())..fetchDrivers(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => RideProvider(RideRepoImpl())..load(),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -85,11 +95,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
 
-      //  home: TestScren(),
       home: AppNavigator(),
-      //  home: DriverHomeScreen(),
-      //  home: LoginPage(),
-      //  home: ProfileScreen(),
     );
   }
 }

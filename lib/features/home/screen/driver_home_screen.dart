@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -152,15 +153,23 @@ class _RideCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final df = DateFormat('MMM d, HH:mm');
     final when = df.format(data.requestedAt);
-    final fareText = NumberFormat.currency(symbol: '₦').format(data.fare);
 
-    final pickup = data.pickupLocation.coordinates; // [lng, lat]
+    // ✅ fare already in naira, no division
+    final fareText = NumberFormat.currency(
+      locale: 'en_NG',
+      symbol: '₦',
+      decimalDigits: 2,
+    ).format(data.fare);
+
+    final pickup = data.pickupLocation.coordinates;
     final dropoff = data.dropoffLocation.coordinates;
+
+    final pickupAddress = data.pickupAddress;
+    final dropOffaddress = data.dropoffAddress;
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () {
-        // Navigate to map preview (driver location is optional param for now)
         Navigator.of(context).push(
           MaterialPageRoute(
             builder:
@@ -191,12 +200,15 @@ class _RideCard extends StatelessWidget {
                 children: [
                   Text(
                     data.passenger.name,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Requested: $when',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -209,19 +221,27 @@ class _RideCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          'Pickup: ${pickup[1].toStringAsFixed(5)}, ${pickup[0].toStringAsFixed(5)}',
+                          pickupAddress,
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       const Icon(Icons.flag, size: 16, color: Colors.red),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          'Dropoff: ${dropoff[1].toStringAsFixed(5)}, ${dropoff[0].toStringAsFixed(5)}',
+                          dropOffaddress,
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -229,7 +249,10 @@ class _RideCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     'Fare: $fareText',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: GoogleFonts.roboto(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
                   ),
                 ],
               ),

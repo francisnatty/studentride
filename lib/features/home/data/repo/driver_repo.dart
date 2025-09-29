@@ -3,10 +3,12 @@ import 'package:studentride/core/utils/logger/debug_logger.dart';
 import 'package:studentride/features/home/data/service/driver_service.dart';
 
 import '../../../../core/helper/type_def.dart';
+import '../model/get_drivers.dart';
 
 abstract class DriverRepo {
   ApiResult<String> toggleAvailiability({required bool status});
   ApiResult<bool> getDriverAvailability();
+  ApiResult<DriversResponse> getDrivers();
 }
 
 class DriverRepoImpl implements DriverRepo {
@@ -31,6 +33,18 @@ class DriverRepoImpl implements DriverRepo {
     if (response.success!) {
       final message = response.rawJson['message'];
       return Right(message);
+    } else {
+      return Left(response.failure!);
+    }
+  }
+
+  @override
+  ApiResult<DriversResponse> getDrivers() async {
+    final response = await driverService.getDrivers();
+    DebugLogger.log('get drivers', response.rawJson);
+
+    if (response.success!) {
+      return Right(response.data!);
     } else {
       return Left(response.failure!);
     }

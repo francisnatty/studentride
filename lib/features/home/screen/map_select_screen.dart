@@ -23,12 +23,25 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
   Set<Marker> _markers = {};
   bool _showPredefinedLocations = true;
   String? _selectedLocationName;
+  String? _selectedLocationAddress; // NEW
 
-  // FUTMINNA coordinates (approximate center of campus)
   static const LatLng _futminnaCenter = LatLng(9.6485, 6.4477);
 
-  // Predefined locations around FUTMINNA
   final List<Map<String, dynamic>> _predefinedLocations = [
+    {
+      'id': 'main_gate',
+      'name': 'Main Gate',
+      'position': LatLng(9.6460, 6.4440),
+      'category': 'Entrance',
+      'icon': BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+    },
+    {
+      'id': 'back_gate',
+      'name': 'Back Gate (Bosso)',
+      'position': LatLng(9.6520, 6.4540),
+      'category': 'Entrance',
+      'icon': BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+    },
     // Faculties
     {
       'id': 'seet',
@@ -182,20 +195,6 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
     },
 
     // Gates and Entrances
-    {
-      'id': 'main_gate',
-      'name': 'Main Gate',
-      'position': LatLng(9.6460, 6.4440),
-      'category': 'Entrance',
-      'icon': BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-    },
-    {
-      'id': 'back_gate',
-      'name': 'Back Gate (Bosso)',
-      'position': LatLng(9.6520, 6.4540),
-      'category': 'Entrance',
-      'icon': BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-    },
 
     // Nearby Popular Places
     {
@@ -232,13 +231,21 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
         _currentPosition = LatLng(locData.latitude!, locData.longitude!);
         _destinationPosition = _currentPosition;
       });
+      // Resolve current position address quickly
+      _resolveAddress(_destinationPosition!);
     } else {
-      // Fallback to FUTMINNA center if location service fails
       setState(() {
         _currentPosition = _futminnaCenter;
         _destinationPosition = _futminnaCenter;
       });
+      _resolveAddress(_destinationPosition!);
     }
+  }
+
+  Future<void> _resolveAddress(LatLng pos) async {
+    final addr = await LocationService().getAddressFromLatLng(pos);
+    if (!mounted) return;
+    setState(() => _selectedLocationAddress = addr);
   }
 
   void _loadPredefinedMarkers() {
@@ -253,27 +260,40 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
                 title: location['name'],
                 snippet: location['category'],
               ),
-              onTap: () {
+              onTap: () async {
                 setState(() {
                   _destinationPosition = location['position'];
                   _selectedLocationName = location['name'];
                 });
+                await _resolveAddress(location['position']); // NEW
               },
             );
           }).toSet();
     });
   }
 
-  void _onMapTapped(LatLng position) {
+  void _onMapTapped(LatLng position) async {
     setState(() {
       _destinationPosition = position;
-      _selectedLocationName = null; // Clear predefined location name
+      _selectedLocationName = null;
     });
+    await _resolveAddress(position); // NEW
   }
 
-  void _confirmDestination() {
+  Future<void> _confirmDestination() async {
+    if (_destinationPosition == null) return;
+
+    // Always prepare return payload with {latLng, name, address}
+    final payload = {
+      'latLng': _destinationPosition!,
+      'name': _selectedLocationName,
+      'address':
+          _selectedLocationAddress ??
+          '${_destinationPosition!.latitude}, ${_destinationPosition!.longitude}',
+    };
+
     if (widget.isFromBookingFlow) {
-      // If coming from booking flow, update the booking provider
+      // Optionally sync to provider (kept minimal; parent now reads the payload)
       final bookingProvider = Provider.of<BookingProvider>(
         context,
         listen: false,
@@ -284,11 +304,14 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
           _destinationPosition!,
         );
       } else {
-        bookingProvider.setDestinationFromMap(_destinationPosition!);
+        bookingProvider.setDestinationLocation(
+          'Selected destination',
+          _destinationPosition!,
+        );
       }
     }
 
-    Navigator.pop(context, _destinationPosition);
+    Navigator.pop(context, payload); // return payload
   }
 
   void _togglePredefinedLocations() {
@@ -309,6 +332,7 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
       _destinationPosition = position;
       _selectedLocationName = name;
     });
+    await _resolveAddress(position); // NEW
   }
 
   Widget _buildLocationsList() {
@@ -380,10 +404,13 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final String title =
-        widget.isFromBookingFlow ? "Select Destination" : "Select Destination";
+    final String title = "Select Destination";
     final String selectedLocationText =
-        _selectedLocationName ?? "Selected Location";
+        _selectedLocationAddress ??
+        _selectedLocationName ??
+        (_destinationPosition != null
+            ? '${_destinationPosition!.latitude}, ${_destinationPosition!.longitude}'
+            : 'Selected Location');
 
     return Scaffold(
       appBar: AppBar(
@@ -423,8 +450,10 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
                             BitmapDescriptor.hueRose,
                           ),
                           infoWindow: InfoWindow(
-                            title: selectedLocationText,
-                            snippet: "Tap 'Confirm' to select this location",
+                            title: _selectedLocationName ?? 'Selected',
+                            snippet:
+                                _selectedLocationAddress ??
+                                "Tap 'Confirm' to select this location",
                           ),
                         ),
                     },
@@ -435,7 +464,6 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
                     mapToolbarEnabled: false,
                   ),
 
-                  // Location List Panel
                   if (_showPredefinedLocations)
                     Positioned(
                       bottom: 80,
@@ -473,6 +501,11 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
                             controller.animateCamera(
                               CameraUpdate.newLatLngZoom(_futminnaCenter, 15),
                             );
+                            setState(() {
+                              _destinationPosition = _futminnaCenter;
+                              _selectedLocationName = 'FUTMINNA Center';
+                            });
+                            await _resolveAddress(_futminnaCenter);
                           },
                           backgroundColor: const Color(0xFF0A3D62),
                           child: const Icon(Icons.home, color: Colors.white),
@@ -494,26 +527,26 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
+                        children: const [
+                          Text(
                             'Legend:',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                             ),
                           ),
-                          _buildLegendItem(Colors.blue, 'Faculties'),
-                          _buildLegendItem(Colors.orange, 'Food'),
-                          _buildLegendItem(Colors.cyan, 'Hostels'),
-                          _buildLegendItem(Colors.green, 'Services'),
-                          _buildLegendItem(Colors.pink, 'Selected'),
+                          _LegendDot(color: Colors.blue, label: 'Faculties'),
+                          _LegendDot(color: Colors.orange, label: 'Food'),
+                          _LegendDot(color: Colors.cyan, label: 'Hostels'),
+                          _LegendDot(color: Colors.green, label: 'Services'),
+                          _LegendDot(color: Colors.pink, label: 'Selected'),
                         ],
                       ),
                     ),
                   ),
 
-                  // Selected location info (if from booking flow)
-                  if (widget.isFromBookingFlow && _destinationPosition != null)
+                  // Selected location info
+                  if (_destinationPosition != null)
                     Positioned(
                       top: 10,
                       left: 10,
@@ -526,7 +559,7 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
                             BoxShadow(
                               color: Colors.black.withOpacity(0.1),
                               blurRadius: 4,
-                              offset: const Offset(0, 2),
+                              offset: Offset(0, 2),
                             ),
                           ],
                         ),
@@ -557,8 +590,14 @@ class _MapSelectScreenState extends State<MapSelectScreen> {
               ),
     );
   }
+}
 
-  Widget _buildLegendItem(Color color, String label) {
+class _LegendDot extends StatelessWidget {
+  final Color color;
+  final String label;
+  const _LegendDot({required this.color, required this.label});
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 1),
       child: Row(

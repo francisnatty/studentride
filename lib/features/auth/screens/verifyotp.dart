@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:provider/provider.dart';
-import 'package:studentride/core/widget/loading_dialog.dart';
 import 'package:studentride/core/widget/snackbar_helper.dart';
 import '../notifier/auth_notifier.dart';
 

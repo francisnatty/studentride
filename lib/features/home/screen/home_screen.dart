@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../sm/booking_provider.dart';
+import '../sm/driver_provider.dart';
 import '../widgets/booking_sheet.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -9,11 +10,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final riders = [
-      {"name": "Waqed Bello", "rating": 4.5, "status": "Available"},
-      {"name": "Zara Khan", "rating": 4.8, "status": "Busy"},
-      {"name": "Mohammed Ali", "rating": 4.2, "status": "Available"},
-    ];
+    final driversProvider = context.watch<DriversProvider>();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -23,7 +20,7 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top Row
+              // ——— top area ———
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -46,10 +43,9 @@ class HomeScreen extends StatelessWidget {
                 "Good Day",
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
-
               const SizedBox(height: 16),
 
-              // Search Box - Opens booking bottom sheet
+              // Search
               GestureDetector(
                 onTap: () => _showBookingBottomSheet(context),
                 child: Container(
@@ -73,10 +69,9 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
 
-              // Discount Banner
+              // Banner
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -119,130 +114,41 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(height: 16),
 
-              // Transport Type Tabs
-              DefaultTabController(
-                length: 3,
-                child: Column(
-                  children: [
-                    const TabBar(
-                      labelColor: Colors.black,
-                      unselectedLabelColor: Colors.grey,
-                      indicatorColor: Colors.black,
-                      tabs: [
-                        Tab(text: "Motorcycle"),
-                        Tab(text: "Tricycle"),
-                        Tab(text: "Minibus"),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
+              // ——— driver list ———
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    if (driversProvider.status == DriversStatus.loading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (driversProvider.status == DriversStatus.error) {
+                      return Center(
+                        child: Text('Error: ${driversProvider.error}'),
+                      );
+                    }
+                    if (driversProvider.drivers.isEmpty) {
+                      return const Center(child: Text('No drivers available'));
+                    }
 
-                    // Rider List
-                    SizedBox(
-                      height: 300,
-                      child: ListView.builder(
-                        itemCount: riders.length,
-                        itemBuilder: (context, index) {
-                          final rider = riders[index];
-                          final isAvailable = rider["status"] == "Available";
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 16),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                const CircleAvatar(
-                                  radius: 30,
-                                  backgroundColor: Colors.grey,
-                                  child: Icon(
-                                    Icons.person,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "Rider Name\n${rider["name"]}",
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.star,
-                                            color: Colors.amber,
-                                            size: 16,
-                                          ),
-                                          Text(" ${rider["rating"]}"),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            isAvailable
-                                                ? Colors.green
-                                                : Colors.red,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        rider["status"].toString(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(
-                                          0xFF0A3D62,
-                                        ),
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 20,
-                                          vertical: 8,
-                                        ),
-                                      ),
-                                      onPressed:
-                                          isAvailable
-                                              ? () => _showBookingBottomSheet(
-                                                context,
-                                              )
-                                              : null,
-                                      child: const Text("Book Ride"),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                    return ListView.builder(
+                      padding: const EdgeInsets.only(top: 8, bottom: 16),
+                      itemCount: driversProvider.drivers.length,
+                      itemBuilder: (context, index) {
+                        final driver = driversProvider.drivers[index];
+                        return _DriverCard(
+                          name: driver.displayName,
+                          rating: driver.driverDetails.rating,
+                          isAvailable:
+                              driver
+                                  .driverDetails
+                                  .isVerified, // change to your logic
+                          onBook: () => _showBookingBottomSheet(context),
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ],
@@ -260,9 +166,94 @@ class HomeScreen extends StatelessWidget {
       builder:
           (context) => ChangeNotifierProvider(
             create: (_) => BookingProvider(),
-
             child: const BookingBottomSheet(),
           ),
+    );
+  }
+}
+
+class _DriverCard extends StatelessWidget {
+  final String name;
+  final int rating;
+  final bool isAvailable;
+  final VoidCallback onBook;
+
+  const _DriverCard({
+    required this.name,
+    required this.rating,
+    required this.isAvailable,
+    required this.onBook,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 30,
+            backgroundColor: Colors.grey,
+            child: Icon(Icons.person, color: Colors.white),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.star, color: Colors.amber, size: 16),
+                    Text(' $rating'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isAvailable ? Colors.green : Colors.green,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  "Available",
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0A3D62),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
+                ),
+                onPressed: isAvailable ? onBook : onBook,
+                child: const Text("Book Ride"),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

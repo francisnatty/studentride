@@ -5,6 +5,8 @@ import 'package:studentride/features/home/screen/driver_home_screen.dart';
 import 'package:studentride/features/home/screen/home_screen.dart';
 import 'package:studentride/features/profile/screens/profile_screen.dart';
 
+import '../../ride/screens/ride_screen.dart';
+
 class StudentRideApp extends StatefulWidget {
   const StudentRideApp({super.key});
 
@@ -63,10 +65,7 @@ class _StudentRideAppState extends State<StudentRideApp> {
   List<Widget> _getDriverScreens() {
     return [
       const DriverHomeScreen(),
-      Container(
-        color: Colors.white,
-        child: const Center(child: Text('My Rides')),
-      ),
+      RidesScreen(),
       Container(
         color: Colors.white,
         child: const Center(child: Text('Earnings')),
@@ -78,10 +77,7 @@ class _StudentRideAppState extends State<StudentRideApp> {
   List<Widget> _getPassengerScreens() {
     return [
       const HomeScreen(),
-      Container(
-        color: Colors.white,
-        child: const Center(child: Text('Rides History')),
-      ),
+      RidesScreen(),
       Container(
         color: Colors.white,
         child: const Center(child: Text('Student Info')),

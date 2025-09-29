@@ -1,6 +1,8 @@
 // lib/features/profile/presentation/pages/profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../auth/notifier/auth_session.dart';
+import '../../auth/screens/login.dart';
 import '../sm/profile_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -588,11 +590,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: const Text('Cancel'),
               ),
               TextButton(
-                onPressed: () {
-                  // Clear profile and navigate to login
-                  context.read<ProfileProvider>().clearProfile();
+                onPressed: () async {
                   Navigator.pop(context);
-                  // Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+
+                  context.read<ProfileProvider>().clearProfile();
+                  await context.read<AuthSession>().logout();
+
+                  if (context.mounted) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
+                      (route) => false,
+                    );
+                  }
                 },
                 child: const Text(
                   'Logout',

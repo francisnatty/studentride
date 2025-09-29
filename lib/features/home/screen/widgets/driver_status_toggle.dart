@@ -28,51 +28,58 @@ class _DriverStatusToggleState extends State<DriverStatusToggle> {
         prov.status == DriverAvailabilityStatus.loading ||
         prov.status == DriverAvailabilityStatus.actionLoading;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Text(
-          'Status',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
-        CupertinoSwitch(
-          value: prov.isOnline ?? false, // default false until loaded
-          activeTrackColor: Colors.green,
-          inactiveTrackColor: Colors.orange,
-          onChanged:
-              busy
-                  ? null
-                  : (bool value) async {
-                    final ok = await context
-                        .read<DriverAvailabilityProvider>()
-                        .toggle(value);
-                    if (!mounted) return;
-                    if (ok) {
-                      if (value) {
-                        if (!mounted) return;
-                        SnackBarHelper.showSuccess(
-                          context,
-                          'You are now ONLINE and available for rides',
-                        );
+    return Container(
+      padding: EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Status',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          CupertinoSwitch(
+            value: prov.isOnline ?? false, // default false until loaded
+            activeTrackColor: Colors.green,
+            inactiveTrackColor: Colors.orange,
+            onChanged:
+                busy
+                    ? null
+                    : (bool value) async {
+                      final ok = await context
+                          .read<DriverAvailabilityProvider>()
+                          .toggle(value);
+                      if (!mounted) return;
+                      if (ok) {
+                        if (value) {
+                          if (!mounted) return;
+                          SnackBarHelper.showSuccess(
+                            context,
+                            'You are now ONLINE and available for rides',
+                          );
+                        } else {
+                          SnackBarHelper.showWarning(
+                            context,
+                            'You are now OFFLINE and unavailable for rides',
+                          );
+                        }
                       } else {
-                        SnackBarHelper.showWarning(
-                          context,
-                          'You are now OFFLINE and unavailable for rides',
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              prov.error ?? 'Failed to update status',
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
                         );
                       }
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            prov.error ?? 'Failed to update status',
-                          ),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-        ),
-      ],
+                    },
+          ),
+        ],
+      ),
     );
   }
 }

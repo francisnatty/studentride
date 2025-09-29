@@ -1,12 +1,14 @@
 import 'package:studentride/core/api/response/api_response.dart';
 import 'package:studentride/core/helper/enum.dart';
 import 'package:studentride/core/utils/logger/local_storage.dart';
+import 'package:studentride/features/home/data/model/get_drivers.dart';
 
 import '../../../../core/api/client/dio_client.dart';
 
 abstract class DriverService {
   Future<ApiResponse> toggleAvailiability({required bool status});
   Future<ApiResponse> getDriverAvailability();
+  Future<ApiResponse<DriversResponse>> getDrivers();
 }
 
 class DriverServiceImpl extends DriverService {
@@ -34,6 +36,20 @@ class DriverServiceImpl extends DriverService {
     final response = await apiClient.request(
       path: 'drivers/availability',
       method: MethodType.get,
+    );
+
+    return response;
+  }
+
+  @override
+  Future<ApiResponse<DriversResponse>> getDrivers() async {
+    final login = await local.getLoginResponse();
+    apiClient.setToken(login!.data.token);
+
+    final response = await apiClient.request(
+      path: 'drivers/available-drivers',
+      method: MethodType.get,
+      fromJsonT: (json) => DriversResponse.fromJson(json),
     );
 
     return response;
