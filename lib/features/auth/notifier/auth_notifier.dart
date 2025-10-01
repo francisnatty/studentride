@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:studentride/core/helper/transition.dart';
 import 'package:studentride/core/widget/loading_dialog.dart';
 import 'package:studentride/core/widget/snackbar_helper.dart';
 import 'package:studentride/features/home/screen/driver_home_screen.dart';
 import '../data/model/create_acct_params.dart';
 import '../data/model/reset_password.dart';
 import '../data/repo/auth_repo.dart';
+import '../screens/reset_password.dart';
 import '../widget/dialog_helper.dart';
+import 'home_nav.dart';
 
 class AuthNotifier extends ChangeNotifier {
   final AuthRepo authRepo;
@@ -68,7 +71,7 @@ class AuthNotifier extends ChangeNotifier {
         SnackBarHelper.showSuccess(context, 'Login Successfull');
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const DriverHomeScreen()),
+          MaterialPageRoute(builder: (context) => const StudentRideApp()),
           (Route<dynamic> route) => false,
         );
       },
@@ -176,8 +179,7 @@ class AuthNotifier extends ChangeNotifier {
       },
       (success) {
         SnackBarHelper.showSuccess(context, success);
-        // Optionally navigate to OTP verification screen for password reset
-        // Navigator.pushNamed(context, '/verify-reset-otp', arguments: email);
+        context.pushRight(ResetPasswordScreen());
       },
     );
   }
@@ -201,6 +203,7 @@ class AuthNotifier extends ChangeNotifier {
       (success) {
         SnackBarHelper.showSuccess(context, success);
         // Navigate back to login screen after successful password reset
+        //  Navigator.pushAndRemoveUntil(context, , predicate)
         Navigator.pushNamedAndRemoveUntil(
           context,
           '/login',

@@ -6,13 +6,14 @@ import 'package:provider/provider.dart';
 
 import 'package:studentride/features/home/data/model/get_available_rides.dart';
 import '../sm/driver_home_provider.dart';
-import 'driver_home_screen.dart';
 
 class DriverMapScreen extends StatefulWidget {
   final RideData ride;
   final LatLng? driverLocation; // pass actual location if available
   final LatLng pickupLatLng;
   final LatLng dropoffLatLng;
+  final String pickupAddress;
+  final String dropOffAddress;
 
   const DriverMapScreen({
     super.key,
@@ -20,6 +21,8 @@ class DriverMapScreen extends StatefulWidget {
     required this.driverLocation,
     required this.pickupLatLng,
     required this.dropoffLatLng,
+    required this.pickupAddress,
+    required this.dropOffAddress,
   });
 
   @override

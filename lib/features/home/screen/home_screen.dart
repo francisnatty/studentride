@@ -1,6 +1,7 @@
 // lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../data/model/get_drivers.dart';
 import '../sm/booking_provider.dart';
 import '../sm/driver_provider.dart';
 import '../widgets/booking_sheet.dart';
@@ -137,14 +138,15 @@ class HomeScreen extends StatelessWidget {
                       itemCount: driversProvider.drivers.length,
                       itemBuilder: (context, index) {
                         final driver = driversProvider.drivers[index];
-                        return _DriverCard(
-                          name: driver.displayName,
-                          rating: driver.driverDetails.rating,
-                          isAvailable:
-                              driver
-                                  .driverDetails
-                                  .isVerified, // change to your logic
-                          onBook: () => _showBookingBottomSheet(context),
+                        return DriverCard(
+                          driver: driver,
+                          // name: driver.displayName,
+                          // rating: driver.driverDetails.rating,
+                          // isAvailable:
+                          //     driver
+                          //         .driverDetails
+                          //         .isVerified, // change to your logic
+                          // onBook: () => _showBookingBottomSheet(context),
                         );
                       },
                     );
@@ -172,88 +174,305 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _DriverCard extends StatelessWidget {
-  final String name;
-  final int rating;
-  final bool isAvailable;
-  final VoidCallback onBook;
+class DriverCard extends StatelessWidget {
+  final Driver driver;
+  final VoidCallback? onTap;
 
-  const _DriverCard({
-    required this.name,
-    required this.rating,
-    required this.isAvailable,
-    required this.onBook,
+  const DriverCard({Key? key, required this.driver, this.onTap})
+    : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 0,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            border: Border.all(color: const Color(0xFFE8E8E8)),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header: Avatar + Name + Verified Badge
+              Row(
+                children: [
+                  // Avatar with online indicator
+                  Stack(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).primaryColor,
+                              Theme.of(context).primaryColor.withOpacity(0.7),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            _getInitials(driver.displayName),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 2,
+                        bottom: 2,
+                        child: Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4CAF50),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Name and verification
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                driver.displayName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                              ),
+                            ),
+                            if (driver.driverDetails.isVerified) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2196F3),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.check,
+                                  size: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          driver.phone,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Rating badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF8E1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.star_rounded,
+                          size: 16,
+                          color: Color(0xFFFFA000),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          driver.driverDetails.rating.toString(),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFFF57C00),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Divider
+              Container(height: 1, color: const Color(0xFFF5F5F5)),
+
+              const SizedBox(height: 16),
+
+              // Stats row
+              Row(
+                children: [
+                  Expanded(
+                    child: _StatItem(
+                      icon: Icons.local_taxi_rounded,
+                      label: 'Total Rides',
+                      value: _formatNumber(driver.driverDetails.totalRides),
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 40,
+                    color: const Color(0xFFF5F5F5),
+                  ),
+                  Expanded(
+                    child: _StatItem(
+                      icon: Icons.location_on_rounded,
+                      label: 'Location',
+                      value: _getLocationStatus(driver.currentLocation),
+                      color: const Color(0xFF4CAF50),
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 40,
+                    color: const Color(0xFFF5F5F5),
+                  ),
+                  Expanded(
+                    child: _StatItem(
+                      icon:
+                          driver.driverDetails.isVerified
+                              ? Icons.verified_rounded
+                              : Icons.info_rounded,
+                      label: 'Status',
+                      value:
+                          driver.driverDetails.isVerified
+                              ? 'Verified'
+                              : 'Pending',
+                      color:
+                          driver.driverDetails.isVerified
+                              ? const Color(0xFF2196F3)
+                              : Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+
+              if (onTap != null) ...[
+                const SizedBox(height: 16),
+
+                // View details link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      'View details',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 16,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getInitials(String name) {
+    final parts = name.trim().split(' ');
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  String _formatNumber(int number) {
+    if (number >= 1000) {
+      return '${(number / 1000).toStringAsFixed(1)}k';
+    }
+    return number.toString();
+  }
+
+  String _getLocationStatus(CurrentLocation location) {
+    if (location.coordinates.isEmpty) return 'Unknown';
+    return 'Active';
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  const _StatItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const CircleAvatar(
-            radius: 30,
-            backgroundColor: Colors.grey,
-            child: Icon(Icons.person, color: Colors.white),
+    return Column(
+      children: [
+        Icon(icon, size: 20, color: color),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1A1A1A),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 16),
-                    Text(' $rating'),
-                  ],
-                ),
-              ],
-            ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500,
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isAvailable ? Colors.green : Colors.green,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  "Available",
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0A3D62),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
-                ),
-                onPressed: isAvailable ? onBook : onBook,
-                child: const Text("Book Ride"),
-              ),
-            ],
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

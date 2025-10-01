@@ -178,6 +178,8 @@ class _RideCard extends StatelessWidget {
                   driverLocation: null,
                   pickupLatLng: LatLng(pickup[1], pickup[0]),
                   dropoffLatLng: LatLng(dropoff[1], dropoff[0]),
+                  pickupAddress: data.pickupAddress,
+                  dropOffAddress: data.dropoffAddress,
                 ),
           ),
         );
