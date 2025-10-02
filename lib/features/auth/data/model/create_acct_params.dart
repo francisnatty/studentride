@@ -7,6 +7,7 @@ class RegistrationModel {
   final String role;
   final String? matricNumber; // For passengers
   final String? nin; // For drivers
+  final String? vehicleType; // ✅ NEW for drivers (motorcycle / tricycle)
 
   RegistrationModel({
     required this.name,
@@ -16,6 +17,7 @@ class RegistrationModel {
     required this.role,
     this.matricNumber,
     this.nin,
+    this.vehicleType,
   });
 
   Map<String, dynamic> toJson() {
@@ -32,8 +34,9 @@ class RegistrationModel {
       json['matricNumber'] = matricNumber;
     }
 
-    if (role == 'driver' && nin != null) {
-      json['nin'] = nin;
+    if (role == 'driver') {
+      if (nin != null) json['nin'] = nin;
+      if (vehicleType != null) json['vehicleType'] = vehicleType;
     }
 
     return json;
@@ -41,6 +44,6 @@ class RegistrationModel {
 
   @override
   String toString() {
-    return 'RegistrationModel(name: $name, email: $email, phone: $phone, password: $password, role: $role, matricNumber: $matricNumber, nin: $nin)';
+    return 'RegistrationModel(name: $name, email: $email, phone: $phone, password: $password, role: $role, matricNumber: $matricNumber, nin: $nin, vehicleType: $vehicleType)';
   }
 }

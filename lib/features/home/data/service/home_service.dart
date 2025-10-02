@@ -1,4 +1,5 @@
 import 'package:studentride/core/helper/enum.dart';
+import 'package:studentride/core/utils/logger/debug_logger.dart';
 import 'package:studentride/core/utils/logger/local_storage.dart';
 import 'package:studentride/features/home/data/model/request_ride_response.dart';
 
@@ -11,7 +12,7 @@ abstract class HomeService {
     required RideRequestParams params,
   });
   Future<ApiResponse> farePreview({required RideRequestParams params});
-  Future<ApiResponse<GetRideModel>> getAvailableRides();
+  Future<ApiResponse<GetAvailableRideModel>> getAvailableRides();
   Future<ApiResponse> acceptRide({required String rideId});
   Future<ApiResponse> rejectRide({required String rideId});
 }
@@ -68,15 +69,17 @@ class HomeServiceImpl implements HomeService {
   }
 
   @override
-  Future<ApiResponse<GetRideModel>> getAvailableRides() async {
+  Future<ApiResponse<GetAvailableRideModel>> getAvailableRides() async {
     final login = await local.getLoginResponse();
     apiClient.setToken(login!.data.token);
 
     final response = await apiClient.request(
       path: 'drivers/rides/available',
       method: MethodType.get,
-      fromJsonT: (json) => GetRideModel.fromJson(json),
+      fromJsonT: (json) => GetAvailableRideModel.fromJson(json),
     );
+
+    DebugLogger.log('get available rides', response.rawJson);
 
     return response;
   }

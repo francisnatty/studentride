@@ -18,6 +18,7 @@ import 'package:studentride/features/profile/screens/profile_screen.dart';
 import 'package:studentride/features/profile/sm/profile_provider.dart';
 import 'package:studentride/features/ride/data/repo/ride_repo.dart';
 import 'package:studentride/features/ride/sm/ride_provider.dart';
+import 'package:studentride/features/wallet/sm/wallet_provider.dart';
 import 'package:studentride/firebase_options.dart';
 import 'package:studentride/flutter_local_notification.dart';
 import 'features/auth/data/repo/auth_repo.dart';
@@ -76,6 +77,7 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => RideProvider(RideRepoImpl())..load(),
         ),
+        ChangeNotifierProvider(create: (_) => WalletProvider()),
       ],
       child: const MyApp(),
     ),

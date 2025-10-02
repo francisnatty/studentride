@@ -23,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   final _ninController = TextEditingController();
 
   String _selectedRole = 'passenger';
+  String? _vehicleType; // 'motorcycle' | 'tricycle' (driver only)
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -64,11 +65,20 @@ class _RegisterScreenState extends State<RegisterScreen>
     super.dispose();
   }
 
-  void _register() async {
+  Future<void> _register() async {
+    // Additional validation for driver vehicle type
+    if (_selectedRole == 'driver' && _vehicleType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your vehicle type')),
+      );
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       final authNotifier = context.read<AuthNotifier>();
 
-      await Future.delayed(const Duration(seconds: 2));
+      //  setState(() => _isLoading = true);
+      await Future.delayed(const Duration(milliseconds: 400)); // tiny UX delay
 
       final user = RegistrationModel(
         name: _nameController.text.trim(),
@@ -81,6 +91,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                 ? _matricNumberController.text.trim()
                 : null,
         nin: _selectedRole == 'driver' ? _ninController.text.trim() : null,
+        vehicleType:
+            _selectedRole == 'driver' ? _vehicleType : null, // ✅ send it
       );
       DebugLogger.log('create acct model', user.toString());
 
@@ -88,74 +100,12 @@ class _RegisterScreenState extends State<RegisterScreen>
     }
   }
 
-  // void _showSuccessDialog() {
-  //   showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder:
-  //         (context) => AlertDialog(
-  //           shape: RoundedRectangleBorder(
-  //             borderRadius: BorderRadius.circular(20),
-  //           ),
-  //           content: Column(
-  //             mainAxisSize: MainAxisSize.min,
-  //             children: [
-  //               Container(
-  //                 width: 80,
-  //                 height: 80,
-  //                 decoration: BoxDecoration(
-  //                   color: const Color(0xFF10B981).withOpacity(0.1),
-  //                   shape: BoxShape.circle,
-  //                 ),
-  //                 child: const Icon(
-  //                   Icons.check_circle,
-  //                   color: Color(0xFF10B981),
-  //                   size: 50,
-  //                 ),
-  //               ),
-  //               const SizedBox(height: 20),
-  //               const Text(
-  //                 'Account Created!',
-  //                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-  //                 textAlign: TextAlign.center,
-  //               ),
-  //               const SizedBox(height: 10),
-  //               const Text(
-  //                 'Your account has been created successfully. You can now sign in.',
-  //                 style: TextStyle(color: Colors.grey, fontSize: 14),
-  //                 textAlign: TextAlign.center,
-  //               ),
-  //               const SizedBox(height: 20),
-  //               SizedBox(
-  //                 width: double.infinity,
-  //                 child: ElevatedButton(
-  //                   onPressed: () {
-  //                     Navigator.pop(context);
-  //                     Navigator.pop(context);
-  //                   },
-  //                   style: ElevatedButton.styleFrom(
-  //                     backgroundColor: const Color(0xFF667eea),
-  //                     shape: RoundedRectangleBorder(
-  //                       borderRadius: BorderRadius.circular(12),
-  //                     ),
-  //                   ),
-  //                   child: const Text(
-  //                     'Continue to Login',
-  //                     style: TextStyle(color: Colors.white),
-  //                   ),
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //   );
-  // }
-
   void _onRoleChanged(String role) {
     setState(() {
       _selectedRole = role;
       if (role == 'passenger') {
         _ninController.clear();
+        _vehicleType = null; // clear when switching away from driver
       } else {
         _matricNumberController.clear();
       }
@@ -279,7 +229,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                           ),
                           const SizedBox(height: 32),
 
-                          // Role selector moved to top for better UX
+                          // Role selector moved to top
                           _buildRoleSelector(),
                           const SizedBox(height: 20),
 
@@ -298,9 +248,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                             icon: Icons.email_outlined,
                             keyboardType: TextInputType.emailAddress,
                             validator: (val) {
-                              if (val == null || val.isEmpty) {
+                              if (val == null || val.isEmpty)
                                 return 'Please enter your email';
-                              }
                               if (!RegExp(
                                 r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}$',
                               ).hasMatch(val)) {
@@ -316,12 +265,10 @@ class _RegisterScreenState extends State<RegisterScreen>
                             icon: Icons.phone_outlined,
                             keyboardType: TextInputType.phone,
                             validator: (val) {
-                              if (val == null || val.isEmpty) {
+                              if (val == null || val.isEmpty)
                                 return 'Please enter your phone number';
-                              }
-                              if (val.length < 10) {
+                              if (val.length < 10)
                                 return 'Phone number must be at least 10 digits';
-                              }
                               return null;
                             },
                           ),
@@ -337,7 +284,6 @@ class _RegisterScreenState extends State<RegisterScreen>
                                 if (val == null || val.isEmpty) {
                                   return 'Matric number is required for students';
                                 }
-                                // Validate matric number format: YYYY/D/DDDDDXX
                                 if (!RegExp(
                                   r'^\d{4}/\d{1}/\d{5}[A-Z]{2}$',
                                 ).hasMatch(val)) {
@@ -365,6 +311,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                                 return null;
                               },
                             ),
+                            const SizedBox(height: 16),
+                            _buildVehicleTypeSelector(), // ✅ pretty vehicle selector
                             const SizedBox(height: 20),
                           ],
 
@@ -374,12 +322,10 @@ class _RegisterScreenState extends State<RegisterScreen>
                             icon: Icons.lock_outline,
                             isPassword: true,
                             validator: (val) {
-                              if (val == null || val.isEmpty) {
+                              if (val == null || val.isEmpty)
                                 return 'Please enter a password';
-                              }
-                              if (val.length < 6) {
+                              if (val.length < 6)
                                 return 'Password must be at least 6 characters';
-                              }
                               return null;
                             },
                           ),
@@ -577,7 +523,9 @@ class _RegisterScreenState extends State<RegisterScreen>
 
     return GestureDetector(
       onTap: () => _onRoleChanged(role),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF667eea) : Colors.white,
@@ -623,6 +571,137 @@ class _RegisterScreenState extends State<RegisterScreen>
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===== Vehicle Type Selector (Driver Only) =====
+  Widget _buildVehicleTypeSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Select your vehicle type',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF2D3748),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _vehiclePill(
+                value: 'motorcycle',
+                emoji: '🏍️',
+                label: 'Motorcycle',
+                subtitle: 'Fast & agile',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _vehiclePill(
+                value: 'tricycle',
+                emoji: '🛺',
+                label: 'Tricycle',
+                subtitle: 'More seats',
+              ),
+            ),
+          ],
+        ),
+        if (_vehicleType == null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Text(
+              'Required for drivers',
+              style: TextStyle(color: Colors.red[400], fontSize: 12),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _vehiclePill({
+    required String value,
+    required String emoji,
+    required String label,
+    required String subtitle,
+  }) {
+    final isSelected = _vehicleType == value;
+    return InkWell(
+      onTap: () => setState(() => _vehicleType = value),
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFEEF2FF) : Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF667eea) : Colors.grey[300]!,
+            width: 2,
+          ),
+          boxShadow:
+              isSelected
+                  ? [
+                    BoxShadow(
+                      color: const Color(0xFF667eea).withOpacity(0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                  : [],
+        ),
+        child: Row(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 22)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color:
+                          isSelected
+                              ? const Color(0xFF3B4CCA)
+                              : const Color(0xFF2D3748),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color:
+                          isSelected
+                              ? const Color(0xFF667eea)
+                              : Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              child:
+                  isSelected
+                      ? const Icon(
+                        Icons.check_circle,
+                        key: ValueKey('on'),
+                        color: Color(0xFF667eea),
+                      )
+                      : const Icon(
+                        Icons.circle_outlined,
+                        key: ValueKey('off'),
+                        color: Color(0xFF94A3B8),
+                      ),
             ),
           ],
         ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:studentride/core/helper/transition.dart';
 import '../notifier/auth_notifier.dart';
+import 'create_acct.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -378,7 +380,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         ),
                         TextButton(
                           onPressed: () {
-                            // Navigate to sign up page
+                            context.pushRight(RegisterScreen());
                           },
                           child: const Text(
                             'Sign Up',

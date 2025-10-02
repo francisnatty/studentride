@@ -14,7 +14,7 @@ abstract class HomeRepo {
 
   ApiResult<String> acceptRide({required String rideId});
   ApiResult<String> rejectRide({required String rideId});
-  ApiResult<GetRideModel> getAvailableRides();
+  ApiResult<GetAvailableRideModel> getAvailableRides();
 }
 
 class HomeRepoImpl implements HomeRepo {
@@ -74,7 +74,7 @@ class HomeRepoImpl implements HomeRepo {
   }
 
   @override
-  ApiResult<GetRideModel> getAvailableRides() async {
+  ApiResult<GetAvailableRideModel> getAvailableRides() async {
     final response = await homeService.getAvailableRides();
     DebugLogger.log('get available rides', response.rawJson);
     if (response.success!) {

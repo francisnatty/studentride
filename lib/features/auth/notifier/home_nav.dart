@@ -4,7 +4,7 @@ import 'package:studentride/features/auth/notifier/auth_session.dart';
 import 'package:studentride/features/home/screen/driver_home_screen.dart';
 import 'package:studentride/features/home/screen/home_screen.dart';
 import 'package:studentride/features/profile/screens/profile_screen.dart';
-
+import 'package:studentride/features/wallet/screens/wallet_screen.dart';
 import '../../ride/screens/ride_screen.dart';
 
 class StudentRideApp extends StatefulWidget {
@@ -66,24 +66,14 @@ class _StudentRideAppState extends State<StudentRideApp> {
     return [
       const DriverHomeScreen(),
       RidesScreen(),
-      Container(
-        color: Colors.white,
-        child: const Center(child: Text('Earnings')),
-      ),
+      WalletScreen(),
+
       ProfileScreen(),
     ];
   }
 
   List<Widget> _getPassengerScreens() {
-    return [
-      const HomeScreen(),
-      RidesScreen(),
-      Container(
-        color: Colors.white,
-        child: const Center(child: Text('Student Info')),
-      ),
-      ProfileScreen(),
-    ];
+    return [const HomeScreen(), RidesScreen(), WalletScreen(), ProfileScreen()];
   }
 
   List<BottomNavigationBarItem> _getDriverNavItems() {
@@ -101,7 +91,7 @@ class _StudentRideAppState extends State<StudentRideApp> {
       const BottomNavigationBarItem(
         icon: Icon(Icons.account_balance_wallet_outlined),
         activeIcon: Icon(Icons.account_balance_wallet),
-        label: 'Earnings',
+        label: 'Wallet',
       ),
       const BottomNavigationBarItem(
         icon: Icon(Icons.person_outline),
@@ -124,9 +114,9 @@ class _StudentRideAppState extends State<StudentRideApp> {
         label: 'Rides',
       ),
       const BottomNavigationBarItem(
-        icon: Icon(Icons.school_outlined),
-        activeIcon: Icon(Icons.school),
-        label: 'Student',
+        icon: Icon(Icons.account_balance_wallet_outlined),
+        activeIcon: Icon(Icons.account_balance_wallet),
+        label: 'Wallet',
       ),
       const BottomNavigationBarItem(
         icon: Icon(Icons.person_outline),

@@ -1,12 +1,12 @@
-class GetRideModel {
+class GetAvailableRideModel {
   final bool success;
   final List<RideData> data;
 
-  GetRideModel({required this.success, required this.data});
+  GetAvailableRideModel({required this.success, required this.data});
 
-  factory GetRideModel.fromJson(Map<String, dynamic> json) {
+  factory GetAvailableRideModel.fromJson(Map<String, dynamic> json) {
     final rawData = (json['data'] as List?) ?? const [];
-    return GetRideModel(
+    return GetAvailableRideModel(
       success: (json['success'] as bool?) ?? false,
       data:
           rawData
@@ -25,8 +25,8 @@ class RideData {
   final Location pickupLocation;
   final Location dropoffLocation;
   final String id;
-  final Passenger passenger;
-  final dynamic driver; // keep dynamic/nullable for now (null in response)
+  final Passenger? passenger; // <-- make nullable
+  final dynamic driver; // keep as is
   final int fare;
   final String pickupAddress;
   final String dropoffAddress;
@@ -38,7 +38,7 @@ class RideData {
     required this.pickupLocation,
     required this.dropoffLocation,
     required this.id,
-    required this.passenger,
+    this.passenger, // nullable
     this.driver,
     required this.fare,
     required this.pickupAddress,
@@ -48,23 +48,16 @@ class RideData {
     required this.v,
   });
 
-  /// Convenience getters (note: order in API may be lat/lng or lng/lat; rename as you prefer)
-  double get pickupLat => pickupLocation.coordinates[0];
-  double get pickupLng => pickupLocation.coordinates[1];
-  double get dropoffLat => dropoffLocation.coordinates[0];
-  double get dropoffLng => dropoffLocation.coordinates[1];
-
   factory RideData.fromJson(Map<String, dynamic> json) {
     return RideData(
-      pickupLocation: Location.fromJson(
-        json['pickupLocation'] as Map<String, dynamic>,
-      ),
-      dropoffLocation: Location.fromJson(
-        json['dropoffLocation'] as Map<String, dynamic>,
-      ),
+      pickupLocation: Location.fromJson(json['pickupLocation']),
+      dropoffLocation: Location.fromJson(json['dropoffLocation']),
       id: json['_id'] as String,
-      passenger: Passenger.fromJson(json['passenger'] as Map<String, dynamic>),
-      driver: json['driver'], // null in your sample
+      passenger:
+          json['passenger'] != null
+              ? Passenger.fromJson(json['passenger'])
+              : null, // ✅ safely handle null
+      driver: json['driver'],
       fare: (json['fare'] as num).toInt(),
       pickupAddress: (json['pickupAddress'] as String?) ?? '',
       dropoffAddress: (json['dropoffAddress'] as String?) ?? '',
@@ -78,7 +71,7 @@ class RideData {
     'pickupLocation': pickupLocation.toJson(),
     'dropoffLocation': dropoffLocation.toJson(),
     '_id': id,
-    'passenger': passenger.toJson(),
+    'passenger': passenger?.toJson(), // ✅ null-safe
     'driver': driver,
     'fare': fare,
     'pickupAddress': pickupAddress,

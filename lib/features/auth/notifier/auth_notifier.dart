@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:studentride/core/helper/transition.dart';
 import 'package:studentride/core/widget/loading_dialog.dart';
 import 'package:studentride/core/widget/snackbar_helper.dart';
+import 'package:studentride/features/auth/screens/login.dart';
+import 'package:studentride/features/auth/screens/verifyotp.dart';
 import 'package:studentride/features/home/screen/driver_home_screen.dart';
 import '../data/model/create_acct_params.dart';
 import '../data/model/reset_password.dart';
@@ -44,9 +46,14 @@ class AuthNotifier extends ChangeNotifier {
       title: 'Verification Successful!',
       message: 'Your phone number has been verified successfully.',
       onContinue: () {
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => LoginPage()),
+          (Route<dynamic> route) => false,
+        );
       },
     );
+
+    //    Navigator.pushAndRemoveUntil(context, newRoute, predicate)
   }
 
   Future<void> login({
@@ -92,10 +99,7 @@ class AuthNotifier extends ChangeNotifier {
 
     final result = await authRepo.createAcct(params: model);
 
-    // result.fold(
-    //   (failure) => _setError(failure.message),
-    //   (_) => _setSuccess(true),
-    // );
+    LoadingDialog.hide(context);
 
     result.fold(
       (failure) {
@@ -103,6 +107,7 @@ class AuthNotifier extends ChangeNotifier {
       },
       (success) {
         SnackBarHelper.showSuccess(context, success);
+        context.pushRight(OTPVerificationScreen(email: model.email));
       },
     );
 
@@ -131,10 +136,14 @@ class AuthNotifier extends ChangeNotifier {
     result.fold(
       (failure) {
         SnackBarHelper.showError(context, failure.message);
-        handleSuccess(context);
       },
       (success) {
         SnackBarHelper.showSuccess(context, success);
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+          (Route<dynamic> route) => false,
+        );
       },
     );
   }

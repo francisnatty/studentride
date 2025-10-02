@@ -3,12 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:provider/provider.dart';
-import 'package:studentride/core/widget/snackbar_helper.dart';
 import '../notifier/auth_notifier.dart';
 
 class OTPVerificationScreen extends StatefulWidget {
   final String email;
-
   const OTPVerificationScreen({super.key, required this.email});
 
   @override
@@ -26,6 +24,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen>
   int _resendTimeLeft = 60;
   Timer? _resendTimer;
   String _currentText = "";
+  bool _submitted = false; // ✅ prevent double submit
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -70,6 +69,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen>
 
     _resendTimer?.cancel();
     _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
       setState(() {
         if (_resendTimeLeft > 0) {
           _resendTimeLeft--;
@@ -81,37 +81,35 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen>
     });
   }
 
-  Future<void> _verifyOTP() async {
-    if (_currentText.length != 6) {
-      _errorController.add(ErrorAnimationType.shake);
-      SnackBarHelper.showError(context, 'Please enter complete OTP');
+  // ✅ Single place to submit OTP (used by onCompleted and Verify button)
+
+  Future<void> _submitOtp(String code) async {
+    if (_submitted) return; // already submitting
+    if (code.length != 6) {
+      _errorController.add(
+        ErrorAnimationType.shake,
+      ); // just shake; provider shows errors
       return;
     }
 
-    final authNotifier = Provider.of<AuthNotifier>(context, listen: false);
+    _submitted = true; // guard against double submit
+    final authNotifier = context.read<AuthNotifier>();
 
     await authNotifier.verifyOtp(
       context: context,
       email: widget.email,
-      otp: _currentText,
+      otp: code,
     );
 
-    if (!mounted) return;
-
-    if (authNotifier.errorMessage == null) {
-    } else {
-      _errorController.add(ErrorAnimationType.shake);
-      _pinController.clear();
-      setState(() {
-        _currentText = '';
-      });
-    }
+    // Provider handles success/error UI + navigation.
+    // Allow another attempt only if user edits the field again:
+    _submitted = false;
   }
 
   Future<void> _resendOTP() async {
     if (!_canResend) return;
 
-    final authNotifier = Provider.of<AuthNotifier>(context, listen: false);
+    final authNotifier = context.read<AuthNotifier>();
     await authNotifier.resendOtp(context: context, email: widget.email);
 
     if (!mounted) return;
@@ -121,13 +119,17 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen>
     setState(() {
       _currentText = '';
     });
+    _pinFocusNode.requestFocus();
   }
 
-  String _formatPhoneNumber(String phone) {
-    if (phone.length >= 4) {
-      return '${phone.substring(0, phone.length - 4).replaceAll(RegExp(r'.'), '*')}${phone.substring(phone.length - 4)}';
-    }
-    return phone;
+  String _maskEmail(String email) {
+    // simple readable mask: jo****@domain.com
+    final parts = email.split('@');
+    if (parts.length != 2) return email;
+    final name = parts[0];
+    final domain = parts[1];
+    final visible = name.length <= 2 ? name : name.substring(0, 2);
+    return '$visible****@$domain';
   }
 
   @override
@@ -171,7 +173,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen>
                           const Icon(Icons.sms, color: Colors.white, size: 80),
                           const SizedBox(height: 20),
                           const Text(
-                            'Verify Your Number',
+                            'Verify Your Account',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 24,
@@ -179,7 +181,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen>
                             ),
                           ),
                           Text(
-                            'Code sent to ${_formatPhoneNumber(widget.email)}',
+                            'Code sent to ${_maskEmail(widget.email)}',
                             style: const TextStyle(color: Colors.white70),
                           ),
                         ],
@@ -214,7 +216,10 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen>
                               _currentText = value;
                             });
                           },
-                          onCompleted: (_) => _verifyOTP(),
+                          onCompleted:
+                              (code) => _submitOtp(
+                                code,
+                              ), // ✅ submit after complete entry
                           beforeTextPaste: (text) {
                             return text != null &&
                                 text.length == 6 &&
@@ -236,13 +241,14 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen>
                           animationType: AnimationType.fade,
                         ),
                         const SizedBox(height: 24),
+                        // Optional verify button (also submits if complete)
                         ElevatedButton(
-                          onPressed: _verifyOTP,
-                          child: const Text('Verify'),
+                          onPressed: () => _submitOtp(_currentText),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF667eea),
                             minimumSize: const Size(double.infinity, 50),
                           ),
+                          child: const Text('Verify'),
                         ),
                         const SizedBox(height: 12),
                         _canResend

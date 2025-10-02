@@ -123,7 +123,7 @@ class _DriverMapScreenState extends State<DriverMapScreen> {
               fare: fare,
               driverToPickupKm: driverToPickupKm,
               pickupToDropKm: pickupToDropKm,
-              passengerName: widget.ride.passenger.name,
+              passengerName: widget.ride.passenger!.name,
             ),
           ),
 
